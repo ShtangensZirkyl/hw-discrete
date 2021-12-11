@@ -4,7 +4,7 @@ function main() {
 	
 	var ctx=example.getContext("2d");
 
-	var	N       = 10;
+	var	N       = 8;
 
 	let t		= 0;     //время
 		dt 		= 0.01;  //переменная интегрироваания
