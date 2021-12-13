@@ -58,22 +58,22 @@ function main() {
 		dl_left	= Math.sqrt(Math.pow((x[k2] - x[k1]),2) + Math.pow((y[k2] - y[k1]),2));
 		dl_right= Math.sqrt(Math.pow((x[k3] - x[k2]),2) + Math.pow((y[k3] - y[k2]),2));
 
-		//cos_l 	= ((y[k2] - y[k1])) / dl_left;
-		//sin_l 	= ((x[k2] - x[k1])) / dl_left;
-		cos_l 	= Math.abs((y[k2] - y[k1])) / dl_left;
-		sin_l 	= Math.abs((x[k2] - x[k1])) / dl_left;
+		cos_l 	= ((y[k2] - y[k1])) / dl_left;
+		sin_l 	= ((x[k2] - x[k1])) / dl_left;
+		//cos_l 	= Math.abs((y[k2] - y[k1])) / dl_left;
+		//sin_l 	= Math.abs((x[k2] - x[k1])) / dl_left;
 		F_l_y 	= -k * (dl_left - l) * cos_l;
 		F_l_x 	= -k * (dl_left - l) * sin_l;
 
-		//cos_r 	= ((y[k3] - y[k2])) / dl_right;
-		//sin_r 	= ((x[k3] - x[k2])) / dl_right;
-		cos_r 	= Math.abs((y[k3] - y[k2])) / dl_right;
-		sin_r 	= Math.abs((x[k3] - x[k2])) / dl_right;
+		cos_r 	= ((y[k3] - y[k2])) / dl_right;
+		sin_r 	= ((x[k3] - x[k2])) / dl_right;
+		//cos_r 	= Math.abs((y[k3] - y[k2])) / dl_right;
+		//sin_r 	= Math.abs((x[k3] - x[k2])) / dl_right;
 		F_r_y 	= -k * (dl_right - l) * cos_r;
 		F_r_x 	= -k * (dl_right - l) * sin_r;
 
 		//console.log("i = " + k2 + ", dl_left - l = " + (dl_left - l) + ", dl_right - l= " + (dl_right - l));
-		console.log("i = " + k2 + ", f_l_x = " + F_l_x + ", f_l_y = " + F_l_y + ", f_r_x = " + F_r_x + ", f_r_y = " + F_r_y );
+		//console.log("i = " + k2 + ", f_l_x = " + F_l_x + ", f_l_y = " + F_l_y + ", f_r_x = " + F_r_x + ", f_r_y = " + F_r_y );
 		return [F_l_x, F_l_y, F_r_x, F_r_y];
 	}
 	
@@ -120,7 +120,7 @@ function main() {
 	let	F_pres_y = [];
 
 	function Pressure() {
-		let k_pres = 1;
+		let k_pres = 10;
 		let sin_p;
 		let cos_p;
 		let rad;
@@ -132,8 +132,9 @@ function main() {
 			cos_p = (x[i] - x_c) / rad;
 			sin_p = (y[i] - y_c) / rad;
 
-			F_pres_x[i] = k_pres * (1 - Square() / s0) * cos_p;
-			F_pres_y[i] = k_pres * (1 - Square() / s0) * sin_p;
+			F_pres_x[i] = k_pres * (-1 + Square() / s0) * cos_p;
+			F_pres_y[i] = k_pres * (-1 + Square() / s0) * sin_p;
+			console.log("F_pres_x = " + F_pres_x[i] + ", F_pres_y = " + F_pres_x[i]);
 		}
 	}
 
@@ -146,9 +147,11 @@ function main() {
 		}
 		F_elast[N-1] = Elastic_forces(N - 2, N - 1, 0);
 
+		Pressure();
+
 		for (let i = 0; i < N; i++) {
-			F_y[i] = F_elast[i][3] + F_elast[i][1];
-			F_x[i] = F_elast[i][0] + F_elast[i][2];
+			F_y[i] = -F_elast[i][3] + F_elast[i][1] - F_pres_y[i];
+			F_x[i] = F_elast[i][0] - F_elast[i][2] - F_pres_x[i];
 
 			v_y[i] += F_y[i] * dt;
 			y[i] += v_y[i] * dt;
