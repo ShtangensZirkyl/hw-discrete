@@ -4,10 +4,10 @@ function main() {
 	
 	var ctx=example.getContext("2d");
 
-	var	N       = 8;
+	var	N       = 50;
 
 	let	dt 		= 0.01;  //переменная интегрироваания
-	let	k		= 0.1;   //коэф. жесткости
+	let	k		= 1;   //коэф. жесткости
 	
 	let v_y 	= [];
 	let v_x 	= [];
@@ -120,7 +120,7 @@ function main() {
 	let	F_pres_y = [];
 
 	function Pressure() {
-		let k_pres = 10;
+		let k_pres = 6;
 		let sin_p;
 		let cos_p;
 		let rad;
@@ -132,8 +132,8 @@ function main() {
 			cos_p = (x[i] - x_c) / rad;
 			sin_p = (y[i] - y_c) / rad;
 
-			F_pres_x[i] = k_pres * (-1 + Square() / s0) * cos_p;
-			F_pres_y[i] = k_pres * (-1 + Square() / s0) * sin_p;
+			F_pres_x[i] = -k_pres * (-1 + Square() / s0) * cos_p;
+			F_pres_y[i] = -k_pres * (-1 + Square() / s0) * sin_p;
 			console.log("F_pres_x = " + F_pres_x[i] + ", F_pres_y = " + F_pres_x[i]);
 		}
 	}
@@ -150,8 +150,8 @@ function main() {
 		Pressure();
 
 		for (let i = 0; i < N; i++) {
-			F_y[i] = -F_elast[i][3] + F_elast[i][1] - F_pres_y[i];
-			F_x[i] = F_elast[i][0] - F_elast[i][2] - F_pres_x[i];
+			F_y[i] = -F_elast[i][3] + F_elast[i][1] + F_pres_y[i];
+			F_x[i] = F_elast[i][0] - F_elast[i][2] + F_pres_x[i];
 
 			v_y[i] += F_y[i] * dt;
 			y[i] += v_y[i] * dt;
@@ -189,7 +189,7 @@ function main() {
 		for (let i = 0; i < N; i++) {
 			ctx.beginPath();
 			ctx.fillStyle = 'black';
-			ctx.arc(200 + x[i] * 20, 200 + y[i] * 20, 4+i, 0, 2*Math.PI);
+			ctx.arc(200 + x[i] * 20, 200 + y[i] * 20, 4, 0, 2*Math.PI);
 			ctx.fill();
 		}
 	}
