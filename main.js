@@ -4,10 +4,10 @@ function main() {
 	
 	var ctx=example.getContext("2d");
 
-	var	N       = 50;
+	var	N       = 15;
 
 	let	dt 		= 0.01;  //переменная интегрироваания
-	let	k		= 1;   //коэф. жесткости
+	let	k		= 12;   //коэф. жесткости
 	
 	let v_y 	= [];
 	let v_x 	= [];
@@ -22,7 +22,7 @@ function main() {
 	for (let i = 0; i < N; i++) {
 		x.push(Radius * Math.cos(phi * i));
 		y.push(Radius * Math.sin(phi * i));
-		v_y.push(0);
+		v_y.push(0.5);
 		v_x.push(-1);
 	}
 
@@ -120,7 +120,7 @@ function main() {
 	let	F_pres_y = [];
 
 	function Pressure() {
-		let k_pres = 6;
+		let k_pres = 2;
 		let sin_p;
 		let cos_p;
 		let rad;
