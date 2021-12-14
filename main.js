@@ -1,14 +1,15 @@
 window.addEventListener("load",main,false);//подключаем скрипт
-	
+
 function main() {
-	
+
 	var ctx=example.getContext("2d");
 
-	var	N       = 15;
+	var	N       = 100;
 
-	let	dt 		= 0.01;  //переменная интегрироваания
-	let	k		= 12;   //коэф. жесткости
-	
+	let	k		= 20;   //коэф. жесткости
+	let period 	= Math.sqrt(k);
+	let	dt 		= 1/200 * period;  //переменная интегрироваания сделать 1/20 периода колебаний
+
 	let v_y 	= [];
 	let v_x 	= [];
 	let	F_x 	= [];
@@ -22,7 +23,7 @@ function main() {
 	for (let i = 0; i < N; i++) {
 		x.push(Radius * Math.cos(phi * i));
 		y.push(Radius * Math.sin(phi * i));
-		v_y.push(0.5);
+		v_y.push(0);
 		v_x.push(-1);
 	}
 
@@ -40,7 +41,7 @@ function main() {
 	Length();
 
 	console.log(l0);*/
-	
+
 	function Elastic_forces(k1, k2, k3) {
 		var	dl_right;
 		var	dl_left;
@@ -75,14 +76,6 @@ function main() {
 		//console.log("i = " + k2 + ", dl_left - l = " + (dl_left - l) + ", dl_right - l= " + (dl_right - l));
 		//console.log("i = " + k2 + ", f_l_x = " + F_l_x + ", f_l_y = " + F_l_y + ", f_r_x = " + F_r_x + ", f_r_y = " + F_r_y );
 		return [F_l_x, F_l_y, F_r_x, F_r_y];
-	}
-	
-	function Collision() {
-		for (let i = 0; i < N; i++) {
-			for (let j = i + 1; j < N; j++) {
-					null
-			}
-		}
 	}
 
 	function Square() {
@@ -120,7 +113,7 @@ function main() {
 	let	F_pres_y = [];
 
 	function Pressure() {
-		let k_pres = 2;
+		let k_pres = -1.5;
 		let sin_p;
 		let cos_p;
 		let rad;
@@ -128,13 +121,13 @@ function main() {
 		let y_c = mass_center()[1];
 
 		for (let i = 0; i < N; i++) {
-			rad = Math.sqrt(Math.pow((x[i] - x_c),2) + Math.pow((y[i] - y_c),2));
+			rad = Math.sqrt(Math.pow((x[i] - x_c), 2) + Math.pow((y[i] - y_c), 2));
 			cos_p = (x[i] - x_c) / rad;
 			sin_p = (y[i] - y_c) / rad;
 
-			F_pres_x[i] = -k_pres * (-1 + Square() / s0) * cos_p;
-			F_pres_y[i] = -k_pres * (-1 + Square() / s0) * sin_p;
-			console.log("F_pres_x = " + F_pres_x[i] + ", F_pres_y = " + F_pres_x[i]);
+			F_pres_x[i] = k_pres * (Square() / s0 - 1) * cos_p;
+			F_pres_y[i] = k_pres * (Square() / s0 - 1) * sin_p;
+			console.log("i = " + i + ", F_pres_x = " + F_pres_x[i] + ", F_pres_y = " + F_pres_x[i]);
 		}
 	}
 
@@ -151,7 +144,7 @@ function main() {
 
 		for (let i = 0; i < N; i++) {
 			F_y[i] = -F_elast[i][3] + F_elast[i][1] + F_pres_y[i];
-			F_x[i] = F_elast[i][0] - F_elast[i][2] + F_pres_x[i];
+			F_x[i] = F_elast[i][0] - F_elast[i][2] + F_pres_x[i] + LennardJhones(-9 - x[i]);
 
 			v_y[i] += F_y[i] * dt;
 			y[i] += v_y[i] * dt;
@@ -159,7 +152,7 @@ function main() {
 			x[i] += v_x[i] * dt;
 		}
 
-		for (let i = 0; i < N; i++) {
+		/*for (let i = 0; i < N; i++) {
 			if (x[i]>10 || x[i]<-10) {
 				v_x[i] = -v_x[i];
 			}
@@ -167,31 +160,56 @@ function main() {
 			if (y[i]>10 || y[i]<-10) {
 				v_y[i] = -v_y[i];
 			}
+		}*/
+	}
+
+	function LennardJhones(r) {
+		let sigma 	= 0.4;
+		let epsilon = 0.1;
+		return 4 * epsilon * ((sigma / r) ** 12 - (sigma / r) ** 6);
+	}
+
+	function Collision() {
+		for (let i = 0; i < N; i++) {
+			for (let j = i + 1; j < N; j++) {
+				null
+			}
 		}
 	}
 
 	function draw() {
+		ctx.beginPath();
+		ctx.fillStyle = 'white';
+		ctx.rect(0, 0, 400, 400);
+		ctx.fill();
+
 		for (let i = 0; i < N; i++) {
 			ctx.beginPath();
+			ctx.fillStyle = 'black'
 			ctx.arc(200 + x[i] * 20, 200 + y[i] * 20, 5, 0, 2*Math.PI);
 			ctx.fill();
-		}	
-
-		for (let i = 0; i < N; i++) {
-			ctx.beginPath();
-			ctx.fillStyle = 'white';
-			ctx.arc(200 + x[i] * 20, 200 + y[i] * 20, 20, 0, 2*Math.PI);
-			ctx.fill();
 		}
+
+		for (let i = 0; i < N-1; i++) {
+			ctx.beginPath();
+			ctx.strokeStyle = 'black'
+			ctx.moveTo(200 + x[i] * 20, 200 + y[i] * 20);
+			ctx.lineTo(200 + x[i+1] * 20, 200 + y[i+1] * 20);
+			ctx.stroke();
+		}
+
+		ctx.beginPath();
+		ctx.moveTo(200 + x[N-1] * 20, 200 + y[N-1] * 20);
+		ctx.lineTo(200 + x[0] * 20, 200 + y[0] * 20);
+		ctx.stroke();
+
+		ctx.beginPath();
+		ctx.strokeStyle = 'black'
+		ctx.moveTo(1 * 20, 1 * 20);
+		ctx.lineTo(20, 380);
+		ctx.stroke();
 
 		physics();
-
-		for (let i = 0; i < N; i++) {
-			ctx.beginPath();
-			ctx.fillStyle = 'black';
-			ctx.arc(200 + x[i] * 20, 200 + y[i] * 20, 4, 0, 2*Math.PI);
-			ctx.fill();
-		}
 	}
 	setInterval(draw, 10);
 }
