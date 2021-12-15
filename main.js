@@ -4,9 +4,9 @@ function main() {
 
 	var ctx=example.getContext("2d");
 
-	var	N       = 100;
+	var	N       = 50;
 
-	let	k		= 20;   //коэф. жесткости
+	let	k		= 10;   //коэф. жесткости
 	let period 	= Math.sqrt(k);
 	let	dt 		= 1/200 * period;  //переменная интегрироваания сделать 1/20 периода колебаний
 
@@ -23,24 +23,13 @@ function main() {
 	for (let i = 0; i < N; i++) {
 		x.push(Radius * Math.cos(phi * i));
 		y.push(Radius * Math.sin(phi * i));
-		v_y.push(0);
-		v_x.push(-1);
+		v_y.push(0.08);
+		v_x.push(-0.4);
 	}
 
-	//v_x[1] = -1;
+	//v_x[10] = -1;
+
 	let l = Math.sqrt(Math.pow((x[1] - x[0]),2) + Math.pow((y[1] - y[0]),2));
-
-	/*function Length(){
-		for (let i = 0; i < N-1; i++) {
-			l0[i] 		= Math.sqrt(Math.pow((x[i] - x[i+1]),2) + Math.pow((y[i] - y[i+1]),2));
-		}
-
-		l0[N-1] = Math.sqrt(Math.pow((x[N-1] - x[0]),2) + Math.pow((y[N-1] - y[0]),2));
-	}
-
-	Length();
-
-	console.log(l0);*/
 
 	function Elastic_forces(k1, k2, k3) {
 		var	dl_right;
@@ -61,20 +50,14 @@ function main() {
 
 		cos_l 	= ((y[k2] - y[k1])) / dl_left;
 		sin_l 	= ((x[k2] - x[k1])) / dl_left;
-		//cos_l 	= Math.abs((y[k2] - y[k1])) / dl_left;
-		//sin_l 	= Math.abs((x[k2] - x[k1])) / dl_left;
 		F_l_y 	= -k * (dl_left - l) * cos_l;
 		F_l_x 	= -k * (dl_left - l) * sin_l;
 
 		cos_r 	= ((y[k3] - y[k2])) / dl_right;
 		sin_r 	= ((x[k3] - x[k2])) / dl_right;
-		//cos_r 	= Math.abs((y[k3] - y[k2])) / dl_right;
-		//sin_r 	= Math.abs((x[k3] - x[k2])) / dl_right;
 		F_r_y 	= -k * (dl_right - l) * cos_r;
 		F_r_x 	= -k * (dl_right - l) * sin_r;
 
-		//console.log("i = " + k2 + ", dl_left - l = " + (dl_left - l) + ", dl_right - l= " + (dl_right - l));
-		//console.log("i = " + k2 + ", f_l_x = " + F_l_x + ", f_l_y = " + F_l_y + ", f_r_x = " + F_r_x + ", f_r_y = " + F_r_y );
 		return [F_l_x, F_l_y, F_r_x, F_r_y];
 	}
 
@@ -90,13 +73,13 @@ function main() {
 			S2 += x[i+1] * y[i];
 		}
 
-		return 1/2 * Math.abs(S1 + x[N-1] * y[1] - S2 + x[1] * y[N-1]);
+		return 1/2 * Math.abs(S1 + x[N-1] * y[0] - S2 - x[0] * y[N-1]);
 	}
 
-	function Sum(x, lower_bound, upper_bound) {
+	function Sum(term, lower_bound, upper_bound) {
 		let s = 0;
 		for (let i = lower_bound; i < upper_bound; i++) {
-			s += x[i];
+			s += term[i];
 		}
 		return s;
 	}
@@ -107,26 +90,26 @@ function main() {
 		return [x_mass_center, y_mass_center];
 	}
 
-	let s0 		= Square();
+	let s0 		 = Square();
 
 	let F_pres_x = [];
 	let	F_pres_y = [];
 
 	function Pressure() {
-		let k_pres = -1.5;
+		let k_pres = -1500;
 		let sin_p;
 		let cos_p;
 		let rad;
 		let x_c = mass_center()[0];
 		let y_c = mass_center()[1];
-
+		let sq = Square(); //площадь в текущий момент
 		for (let i = 0; i < N; i++) {
 			rad = Math.sqrt(Math.pow((x[i] - x_c), 2) + Math.pow((y[i] - y_c), 2));
 			cos_p = (x[i] - x_c) / rad;
 			sin_p = (y[i] - y_c) / rad;
 
-			F_pres_x[i] = k_pres * (Square() / s0 - 1) * cos_p;
-			F_pres_y[i] = k_pres * (Square() / s0 - 1) * sin_p;
+			F_pres_x[i] = k_pres * (sq / s0 - 1) * cos_p;
+			F_pres_y[i] = k_pres * (sq / s0 - 1) * sin_p;
 			console.log("i = " + i + ", F_pres_x = " + F_pres_x[i] + ", F_pres_y = " + F_pres_x[i]);
 		}
 	}
@@ -151,30 +134,12 @@ function main() {
 			v_x[i] += F_x[i] * dt;
 			x[i] += v_x[i] * dt;
 		}
-
-		/*for (let i = 0; i < N; i++) {
-			if (x[i]>10 || x[i]<-10) {
-				v_x[i] = -v_x[i];
-			}
-
-			if (y[i]>10 || y[i]<-10) {
-				v_y[i] = -v_y[i];
-			}
-		}*/
 	}
 
 	function LennardJhones(r) {
-		let sigma 	= 0.4;
-		let epsilon = 0.1;
+		let sigma 	= 0.2;
+		let epsilon = 0.01;
 		return 4 * epsilon * ((sigma / r) ** 12 - (sigma / r) ** 6);
-	}
-
-	function Collision() {
-		for (let i = 0; i < N; i++) {
-			for (let j = i + 1; j < N; j++) {
-				null
-			}
-		}
 	}
 
 	function draw() {
@@ -185,14 +150,14 @@ function main() {
 
 		for (let i = 0; i < N; i++) {
 			ctx.beginPath();
-			ctx.fillStyle = 'black'
-			ctx.arc(200 + x[i] * 20, 200 + y[i] * 20, 5, 0, 2*Math.PI);
+			ctx.fillStyle = 'black';
+			ctx.arc(200 + x[i] * 20, 200 + y[i] * 20, 3, 0, 2*Math.PI);
 			ctx.fill();
 		}
 
 		for (let i = 0; i < N-1; i++) {
 			ctx.beginPath();
-			ctx.strokeStyle = 'black'
+			ctx.strokeStyle = 'black';
 			ctx.moveTo(200 + x[i] * 20, 200 + y[i] * 20);
 			ctx.lineTo(200 + x[i+1] * 20, 200 + y[i+1] * 20);
 			ctx.stroke();
@@ -204,12 +169,12 @@ function main() {
 		ctx.stroke();
 
 		ctx.beginPath();
-		ctx.strokeStyle = 'black'
-		ctx.moveTo(1 * 20, 1 * 20);
+		ctx.strokeStyle = 'black';
+		ctx.moveTo(20, 20);
 		ctx.lineTo(20, 380);
 		ctx.stroke();
 
 		physics();
 	}
-	setInterval(draw, 10);
+	setInterval(draw, 1);
 }
