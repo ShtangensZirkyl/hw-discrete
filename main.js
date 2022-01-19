@@ -1,49 +1,66 @@
 window.addEventListener("load",main,false);//подключаем скрипт
 
 function main() {
+	let ctx		= example.getContext("2d");
 
-	var ctx=example.getContext("2d");
+	let	N;
 
-	var	N       = 50;
-
-	let	k		= 10;   //коэф. жесткости
+	let	k		= 1000;   //коэф. жесткости
 	let period 	= Math.sqrt(k);
-	let	dt 		= 1/200 * period;  //переменная интегрироваания сделать 1/20 периода колебаний
+	let	dt 		= 0.01;  //переменная интегрироваания сделать 1/20 периода колебаний
 
-	let v_y 	= [];
-	let v_x 	= [];
 	let	F_x 	= [];
 	let	F_y 	= [];
 
-	let	phi     = 2 * Math.PI / N;
-	let	Radius  = 4;
+	let F_pres_x = [];
+	let	F_pres_y = [];
+
+	let v_y 	= [];
+	let v_x 	= [];
+
 	let	x       = [];
 	let	y     	= [];
 
-	for (let i = 0; i < N; i++) {
-		x.push(Radius * Math.cos(phi * i));
-		y.push(Radius * Math.sin(phi * i));
-		v_y.push(0.08);
-		v_x.push(-0.4);
+	let l		= 0;
+
+	let	Radius  = 4;
+	let phi;
+
+	let s0;
+
+	function init() {
+		N = 35;//document.getElementById("NumberElements").value;
+		phi     = 2 * Math.PI / N;
+
+		let xStartVelocity = document.getElementById("xVelocity").value;
+		let yStartVelocity = document.getElementById("yVelocity").value;
+
+		for (let i = 0; i < N; i++) {
+			x.push(Radius * Math.cos(phi * i));
+			y.push(Radius * Math.sin(phi * i));
+			v_y.push(0.1);
+			v_x.push(-0.4);
+			F_pres_x.push(0);
+			F_pres_y.push(0);
+		}
+
+		l = Math.sqrt(Math.pow((x[1] - x[0]),2) + Math.pow((y[1] - y[0]),2));
+		s0 		 = Square();
 	}
 
-	//v_x[10] = -1;
-
-	let l = Math.sqrt(Math.pow((x[1] - x[0]),2) + Math.pow((y[1] - y[0]),2));
-
 	function Elastic_forces(k1, k2, k3) {
-		var	dl_right;
-		var	dl_left;
-		var	F_l_y;
-		var	F_r_y;
+		let	dl_right;
+		let	dl_left;
+		let	F_l_y;
+		let	F_r_y;
 
-		var	F_l_x;
-		var	F_r_x;
+		let	F_l_x;
+		let	F_r_x;
 
-		var	cos_l;
-		var	cos_r;
-		var	sin_l;
-		var	sin_r;
+		let	cos_l;
+		let	cos_r;
+		let	sin_l;
+		let	sin_r;
 
 		dl_left	= Math.sqrt(Math.pow((x[k2] - x[k1]),2) + Math.pow((y[k2] - y[k1]),2));
 		dl_right= Math.sqrt(Math.pow((x[k3] - x[k2]),2) + Math.pow((y[k3] - y[k2]),2));
@@ -90,13 +107,10 @@ function main() {
 		return [x_mass_center, y_mass_center];
 	}
 
-	let s0 		 = Square();
 
-	let F_pres_x = [];
-	let	F_pres_y = [];
-
+/*
 	function Pressure() {
-		let k_pres = -1500;
+		let k_pres = -35;
 		let sin_p;
 		let cos_p;
 		let rad;
@@ -110,8 +124,59 @@ function main() {
 
 			F_pres_x[i] = k_pres * (sq / s0 - 1) * cos_p;
 			F_pres_y[i] = k_pres * (sq / s0 - 1) * sin_p;
-			console.log("i = " + i + ", F_pres_x = " + F_pres_x[i] + ", F_pres_y = " + F_pres_x[i]);
 		}
+	}
+	*/
+	function Pressure_v2() {
+		let k_pres = -0.005;
+
+		let sq = Square(); //площадь в текущий момент
+		let length;
+		let normal_x;
+		let normal_y;
+
+		/*length = Math.sqrt(Math.pow((x[0] - x[1]), 2) + Math.pow((y[0] - y[1]), 2));
+		normal_x = 1/2 * -(y[0] - y[1]) / length;
+		normal_y = 1/2 * (x[0] - x[1]) / length;
+		F_pres_x[1] = k_pres * (sq / s0 - 1) * normal_x;
+		F_pres_y[1] = k_pres * (sq / s0 - 1) * normal_y;
+
+		F_pres_x[0] = k_pres * (sq / s0 - 1) * normal_x;
+		F_pres_y[0] = k_pres * (sq / s0 - 1) * normal_y;*/
+
+		let pressureConst = k_pres * (sq / s0 - 1);
+
+		for (let i = 1; i < N; i++) {
+			length = Math.sqrt(Math.pow((x[i-1] - x[i]), 2) + Math.pow((y[i-1] - y[i]), 2));
+
+			normal_x = -(y[i-1] - y[i]) / length;
+			console.log(normal_x);
+			normal_y = (x[i-1] - x[i]) / length;
+
+			F_pres_x[i] += k_pres * (sq / s0 - 1) * normal_x;
+			F_pres_y[i] += k_pres * (sq / s0 - 1) * normal_y;
+			F_pres_x[i-1] += k_pres * (sq / s0 - 1) * normal_x;
+			F_pres_y[i-1] += k_pres * (sq / s0 - 1) * normal_y;
+		}
+
+		length = Math.sqrt(Math.pow((x[N-1] - x[0]), 2) + Math.pow((y[N-1] - y[0]), 2));
+
+		normal_x = -(y[N-1] - y[0]) / length;
+		normal_y = (x[N-1] - x[0]) / length;
+
+		F_pres_x[N-1] += k_pres * (sq / s0 - 1) * normal_x;
+		F_pres_y[N-1] += k_pres * (sq / s0 - 1) * normal_y;
+		F_pres_x[0] += k_pres * (sq / s0 - 1) * normal_x;
+		F_pres_y[0] += k_pres * (sq / s0 - 1) * normal_y;
+
+		//console.log(pressureConst);
+		/*
+		F_pres_x[N-1] = -F_pres_x[N-2] + F_pres_x[0];
+		F_pres_y[N-1] = -F_pres_y[N-2] + F_pres_y[0];
+
+		F_pres_x[0] = F_pres_x[0] + F_pres_x[N-1];
+		F_pres_y[0] = F_pres_y[0] + F_pres_y[N-1];*/
+
 	}
 
 	function physics() {
@@ -123,11 +188,11 @@ function main() {
 		}
 		F_elast[N-1] = Elastic_forces(N - 2, N - 1, 0);
 
-		Pressure();
+		Pressure_v2();
 
 		for (let i = 0; i < N; i++) {
-			F_y[i] = -F_elast[i][3] + F_elast[i][1] + F_pres_y[i];
-			F_x[i] = F_elast[i][0] - F_elast[i][2] + F_pres_x[i] + LennardJhones(-9 - x[i]);
+			F_y[i] = -F_elast[i][3] + F_elast[i][1] + F_pres_y[i] + LennardJhones(-9 - y[i]) - LennardJhones(9 - y[i]);
+			F_x[i] = F_elast[i][0] - F_elast[i][2] + F_pres_x[i] + LennardJhones(-9 - x[i]) - LennardJhones(9 - x[i]);
 
 			v_y[i] += F_y[i] * dt;
 			y[i] += v_y[i] * dt;
@@ -138,7 +203,7 @@ function main() {
 
 	function LennardJhones(r) {
 		let sigma 	= 0.2;
-		let epsilon = 0.01;
+		let epsilon = 0.5;
 		return 4 * epsilon * ((sigma / r) ** 12 - (sigma / r) ** 6);
 	}
 
@@ -151,7 +216,7 @@ function main() {
 		for (let i = 0; i < N; i++) {
 			ctx.beginPath();
 			ctx.fillStyle = 'black';
-			ctx.arc(200 + x[i] * 20, 200 + y[i] * 20, 3, 0, 2*Math.PI);
+			ctx.arc(200 + x[i] * 20, 200 + y[i] * 20, 2.5, 0, 2*Math.PI);
 			ctx.fill();
 		}
 
@@ -174,7 +239,71 @@ function main() {
 		ctx.lineTo(20, 380);
 		ctx.stroke();
 
+		ctx.beginPath();
+		ctx.strokeStyle = 'black';
+		ctx.moveTo(380, 20);
+		ctx.lineTo(380, 380);
+		ctx.stroke();
+
+		ctx.beginPath();
+		ctx.strokeStyle = 'black';
+		ctx.moveTo(20, 380);
+		ctx.lineTo(380, 380);
+		ctx.stroke();
+
+		ctx.beginPath();
+		ctx.strokeStyle = 'black';
+		ctx.moveTo(20, 20);
+		ctx.lineTo(380, 20);
+		ctx.stroke();
+
 		physics();
+	} 
+
+	let timer;
+
+	function drawOnClick() {
+		/*let flag = document.getElementById("NumberElements").value;
+		if (flag == "") {
+			alert("Введите число элементов");
+		} else {
+			if (flag < 20 || flag > 80) {
+				alert("Введите число в заданных границах");
+			} else {*/
+				init();
+				timer = setInterval(draw, 1);
+			//}
+		//}
 	}
-	setInterval(draw, 1);
+
+	let startButton = document.getElementById("StartButton");
+	let pauseButton = document.getElementById("PauseButton");
+	let clearButton = document.getElementById("ClearButton");
+
+	startButton.onclick = drawOnClick;
+
+	function pauseOnClick() {
+		clearInterval(timer);		
+	}
+
+	pauseButton.onclick = pauseOnClick;
+
+	function clearOnClick() {
+		clearInterval(timer);	
+		x = [];
+		y = [];
+		v_x = [];
+		v_y = [];
+
+		ctx.beginPath();
+		ctx.fillStyle = 'white';
+		ctx.rect(0, 0, 400, 400);
+		ctx.fill();
+	}
+
+	clearButton.onclick = clearOnClick;
 }
+
+
+
+
