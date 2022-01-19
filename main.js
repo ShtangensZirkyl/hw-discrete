@@ -29,11 +29,8 @@ function main() {
 	let s0;
 
 	function init() {
-		N = 35;//document.getElementById("NumberElements").value;
+		N = document.getElementById("NumberElements").value;
 		phi     = 2 * Math.PI / N;
-
-		let xStartVelocity = document.getElementById("xVelocity").value;
-		let yStartVelocity = document.getElementById("yVelocity").value;
 
 		for (let i = 0; i < N; i++) {
 			x.push(Radius * Math.cos(phi * i));
@@ -263,17 +260,17 @@ function main() {
 	let timer;
 
 	function drawOnClick() {
-		/*let flag = document.getElementById("NumberElements").value;
+		let flag = document.getElementById("NumberElements").value;
 		if (flag == "") {
 			alert("Введите число элементов");
 		} else {
 			if (flag < 20 || flag > 80) {
 				alert("Введите число в заданных границах");
-			} else {*/
+			} else {
 				init();
 				timer = setInterval(draw, 1);
-			//}
-		//}
+			}
+		}
 	}
 
 	let startButton = document.getElementById("StartButton");
@@ -294,6 +291,9 @@ function main() {
 		y = [];
 		v_x = [];
 		v_y = [];
+		N = 0;
+		F_pres_x = [];
+		F_pres_y = [];
 
 		ctx.beginPath();
 		ctx.fillStyle = 'white';
